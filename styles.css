@@ -594,16 +594,20 @@ html.menu-open { overflow: hidden; }
   font-size: 1.45cqw;
   line-height: 1.35;
   font-family: var(--f-body);
-  will-change: transform;
 }
 /* l'anteprima scorre da sola, sempre, in solo CSS: 20 secondi per scendere e 20 per risalire, rallentando agli
    estremi (alternate), quindi niente ripartenza a scatto. -100% e' l'altezza dell'immagine, 62.5cqw quella del
    riquadro (16:10): la corsa si ferma al 94% della differenza, quindi sotto il riquadro resta sempre un pezzo
    di immagine e il fondo non si vede mai */
 .screen .page { animation: demoAutoScroll 20s ease-in-out infinite alternate; }
-/* la miniatura sfocata nello style dell'immagine copre tutta la pagina e scorre con lei; le quattro anteprime
-   restano sempre disegnate, ognuna sul suo livello della scheda grafica */
-.screen .page { background-size: 100% 100%; background-repeat: no-repeat; will-change: transform; backface-visibility: hidden; }
+/* la miniatura sfocata nello style dell'immagine copre tutta la pagina e scorre con lei */
+.screen .page { background-size: 100% 100%; background-repeat: no-repeat; }
+/* su telefono e tablet le anteprime scorrono e basta: restano sempre disegnate, ognuna sul suo livello della scheda
+   grafica. Sul computer no: la scena le ingrandisce fino a 2,2 volte e con will-change il browser ingrandirebbe
+   l'immagine gia' disegnata invece di ridisegnarla, sgranandola. Li' arriva anche la versione da 2400 px */
+@media (max-width: 1023px), (max-height: 639px) {
+  .screen .page { will-change: transform; backface-visibility: hidden; }
+}
 @keyframes demoAutoScroll {
   from { transform: translateY(0); }
   to { transform: translateY(calc((-100% + 62.5cqw) * .94)); }

@@ -658,7 +658,7 @@
      Ogni 3,5 secondi la schermata dopo: Dodici Braccia, Studio Cuspide, Rossobrace e di nuovo da capo, ognuna
      con la sua notifica. Il CSS spegne la vecchia in 150 ms e solo dopo accende la nuova, e a ogni ingresso fa
      ripartire scorrimento, tocco e notifica. Il giro salta i turni con la pausa delle animazioni, con la scheda
-     in sottofondo e quando il telefono non si vede. */
+     in sottofondo e quando il telefono non si vede; quando torna in vista riparte subito. */
   (function heroReel() {
     const mock = d.querySelector('.mock');
     if (!mock) return;
@@ -673,16 +673,31 @@
       scenes[i].classList.add('is-on');
       notes.forEach((n, j) => n.classList.toggle('is-on', j === i));
     };
-    setInterval(() => {
+    let timer = 0;
+    const start = () => {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (paused || !inView || d.hidden) return;
+        show((k + 1) % scenes.length);
+      }, 3500);
+    };
+    // tornando sul telefono (scorrendo su o rientrando nella scheda) non si aspetta il giro successivo del timer,
+    // che poteva arrivare fino a 3,5 secondi dopo: la schermata dopo parte subito e il conto ricomincia da li'
+    const wake = () => {
       if (paused || !inView || d.hidden) return;
       show((k + 1) % scenes.length);
-    }, 3500);
+      start();
+    };
+    start();
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(([en]) => {
+        const was = inView;
         inView = en.isIntersecting;
         mock.classList.toggle('is-idle', !inView);
+        if (inView && !was) wake();
       }).observe(mock);
     }
+    d.addEventListener('visibilitychange', () => { if (!d.hidden) wake(); });
   })();
   // sul computer non si tocca: si clicca
   if (finePointer) d.querySelectorAll('.live-badge').forEach((b) => { b.lastChild.textContent = b.lastChild.textContent.replace('Tocca', 'Clicca'); });
