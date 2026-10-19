@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<style>/* sfondo scuro dal primo byte: tra una pagina e l'altra il browser non dipinge mai il bianco */:root{color-scheme:dark}html,body{background:#0B0F19}</style>
+<script id="nav">(function (HOME) {
+var d = document;
+var html = d.documentElement;
+var get = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+var put = function (k, v) {
+try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {  }
+};
+var read = function () { try { return JSON.parse(get('az-home')); } catch (e) { return null; } };
+var to = function (y) { try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); } };
+var nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+var type = nav ? nav.type : 'navigate';
+var VT = 'CSSViewTransitionRule' in window;
+var from = Number(get('az-nav')) || 0;
+put('az-nav', null);
+if (from && Date.now() - from < 10000) {
+var enter = function () {
+html.classList.add('az-enter');
+setTimeout(function () { html.classList.remove('az-enter'); }, 400);
+};
+if (!VT) enter();
+else if ('onpagereveal' in window) window.addEventListener('pagereveal', function (e) { if (!e.viewTransition) enter(); }, { once: true });
+}
+window.addEventListener('pageshow', function (e) { if (e.persisted) html.classList.remove('az-leave'); });
+var blocks = function () { return d.querySelectorAll('main > *, .work, .site-footer'); };
+var boxOf = function (el) {
+var p = el.parentNode;
+return p && p.classList && p.classList.contains('pin-spacer') ? p : el;
+};
+if (HOME) {
+var savedHomeScrollY = 0;
+var save = function () {
+savedHomeScrollY = window.scrollY || html.scrollTop;
+var list = blocks();
+var at = -1;
+var off = 0;
+for (var i = 0; i < list.length; i++) {
+var top = boxOf(list[i]).getBoundingClientRect().top;
+if (top <= 0.5) { at = i; off = -top; }
+}
+var sec = at < 0 ? null : list[at].closest('main > section');
+put('az-home', JSON.stringify({ y: savedHomeScrollY, i: at, o: Math.round(off), s: sec ? sec.id : '' }));
+};
+window.addEventListener('pagehide', save);
+var back = get('az-return') === '1';
+put('az-return', null);
+var pos = read();
+if (pos && (back || type === 'back_forward')) {
+html.classList.add('az-return');
+window.azHomeY = function () {
+var el = pos.i >= 0 ? blocks()[pos.i] : null;
+if (!el) return pos.y;
+return Math.max(0, Math.round(boxOf(el).getBoundingClientRect().top + (window.scrollY || html.scrollTop) + pos.o));
+};
+window.azBack = function () {
+var shots = d.querySelectorAll('.screen img.page');
+for (var k = 0; k < shots.length; k++) shots[k].loading = 'eager';
+try { to(window.azHomeY()); } finally { html.classList.add('az-at'); }
+};
+d.addEventListener('DOMContentLoaded', function () { html.classList.add('az-at'); });
+}
+} else {
+var top0 = function () {
+if (location.hash) return;
+to(0);
+html.scrollTop = 0;
+if (d.body) d.body.scrollTop = 0;
+};
+top0();
+d.addEventListener('DOMContentLoaded', top0);
+window.addEventListener('pageshow', function (e) { if (!e.persisted) top0(); });
+}
+d.addEventListener('click', function (e) {
+if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+var a = e.target.closest ? e.target.closest('a[href]') : null;
+if (!a || a.hasAttribute('download') || a.hasAttribute('data-toast') || (a.target && a.target !== '_self')) return;
+var url;
+try { url = new URL(a.href, location.href); } catch (er) { return; }
+if (url.origin !== location.origin || url.protocol !== location.protocol) return;
+if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+var dest = url.href;
+var again = false;
+var logo = HOME ? null : d.querySelector('.logo');
+if (logo) {
+var home = new URL(logo.href, location.href);
+var p = read();
+if (p && url.pathname === home.pathname && (!url.hash || (url.hash === '#lavori' && p.s === 'lavori'))) {
+again = true;
+put('az-return', '1');
+url.hash = '';
+dest = url.href;
+}
+}
+put('az-nav', String(Date.now()));
+if (HOME) save();
+if (VT) {
+if (again) { e.preventDefault(); location.href = dest; }
+return;
+}
+e.preventDefault();
+html.classList.add('az-leave');
+setTimeout(function () { location.href = dest; }, 160);
+});
+})(false);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy | Alez Tech</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B0F19">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="styles.css?v=42">
+</head>
+<body>
+<header class="site-header is-scrolled">
+  <a class="logo" href="./" aria-label="Alez Tech, torna al sito"><span class="logo-br">&lt;</span><span class="logo-az">AZ</span><span class="logo-br">&gt;</span><span class="logo-name">Alez Tech</span></a>
+</header>
+<main class="legal">
+  <h1>Privacy</h1>
+  <p>Ultimo aggiornamento: 19 ottobre 2026.</p>
+
+  <h2>Chi gestisce il sito</h2>
+  <p>Questo sito è di Alez Tech, lo studio web di Alessandro con base a Vibo Valentia, in Calabria. Per qualsiasi domanda sui tuoi dati puoi scrivermi:</p>
+  <ul>
+    <li>Email: <a href="mailto:info@aleztech.it">info@aleztech.it</a></li>
+    <li>WhatsApp: <a href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech.%20Ho%20una%20domanda%20sulla%20privacy%3A%20" target="_blank" rel="noopener">+39&nbsp;351&nbsp;838&nbsp;3865</a></li>
+    <li>Sede: Vibo Valentia (VV), Italia</li>
+  </ul>
+
+  <h2>Quali dati raccolgo</h2>
+  <p>Nessuno, direttamente. Il sito non ha moduli, non usa cookie e non usa strumenti di statistica.</p>
+  <p>Due cose le ricorda il tuo browser, sul tuo dispositivo: se hai messo in pausa le animazioni e, finché la scheda resta aperta, il punto della home da cui hai aperto una demo, per riportarti lì quando torni. Questi dati non arrivano a me, e il secondo si cancella quando chiudi la scheda.</p>
+  <p>Come per ogni sito, il servizio di hosting registra nei log tecnici l'indirizzo IP e il browser di chi visita le pagine. Servono a far funzionare il sito e a proteggerlo, e vengono cancellati dopo un periodo limitato.</p>
+
+  <h2>Servizi esterni</h2>
+  <p>Per mostrare i caratteri tipografici e far girare le animazioni il sito carica alcuni file da Google Fonts, cdnjs e jsDelivr. Quando li carichi, questi servizi ricevono il tuo indirizzo IP.</p>
+  <p>I link a WhatsApp, Instagram e Facebook aprono servizi di Meta, che hanno le loro regole sulla privacy. Se mi scrivi da lì o per email, uso i dati che mi mandi solo per risponderti, prepararti il preventivo e, se lavoriamo insieme, seguire il progetto.</p>
+
+  <h2>I tuoi diritti</h2>
+  <p>Puoi chiedermi in qualsiasi momento di vedere, correggere o cancellare i dati che mi hai mandato, scrivendo all'email o al numero qui sopra. Se pensi che li abbia trattati male puoi fare reclamo al <a href="https://www.garanteprivacy.it/" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.</p>
+
+  <p><a href="./">Torna al sito</a></p>
+</main>
+</body>
+</html>

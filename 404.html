@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<style>/* sfondo scuro dal primo byte: tra una pagina e l'altra il browser non dipinge mai il bianco */:root{color-scheme:dark}html,body{background:#0B0F19}</style>
+<script id="nav">(function (HOME) {
+var d = document;
+var html = d.documentElement;
+var get = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+var put = function (k, v) {
+try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {  }
+};
+var read = function () { try { return JSON.parse(get('az-home')); } catch (e) { return null; } };
+var to = function (y) { try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); } };
+var nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+var type = nav ? nav.type : 'navigate';
+var VT = 'CSSViewTransitionRule' in window;
+var from = Number(get('az-nav')) || 0;
+put('az-nav', null);
+if (from && Date.now() - from < 10000) {
+var enter = function () {
+html.classList.add('az-enter');
+setTimeout(function () { html.classList.remove('az-enter'); }, 400);
+};
+if (!VT) enter();
+else if ('onpagereveal' in window) window.addEventListener('pagereveal', function (e) { if (!e.viewTransition) enter(); }, { once: true });
+}
+window.addEventListener('pageshow', function (e) { if (e.persisted) html.classList.remove('az-leave'); });
+var blocks = function () { return d.querySelectorAll('main > *, .work, .site-footer'); };
+var boxOf = function (el) {
+var p = el.parentNode;
+return p && p.classList && p.classList.contains('pin-spacer') ? p : el;
+};
+if (HOME) {
+var savedHomeScrollY = 0;
+var save = function () {
+savedHomeScrollY = window.scrollY || html.scrollTop;
+var list = blocks();
+var at = -1;
+var off = 0;
+for (var i = 0; i < list.length; i++) {
+var top = boxOf(list[i]).getBoundingClientRect().top;
+if (top <= 0.5) { at = i; off = -top; }
+}
+var sec = at < 0 ? null : list[at].closest('main > section');
+put('az-home', JSON.stringify({ y: savedHomeScrollY, i: at, o: Math.round(off), s: sec ? sec.id : '' }));
+};
+window.addEventListener('pagehide', save);
+var back = get('az-return') === '1';
+put('az-return', null);
+var pos = read();
+if (pos && (back || type === 'back_forward')) {
+html.classList.add('az-return');
+window.azHomeY = function () {
+var el = pos.i >= 0 ? blocks()[pos.i] : null;
+if (!el) return pos.y;
+return Math.max(0, Math.round(boxOf(el).getBoundingClientRect().top + (window.scrollY || html.scrollTop) + pos.o));
+};
+window.azBack = function () {
+var shots = d.querySelectorAll('.screen img.page');
+for (var k = 0; k < shots.length; k++) shots[k].loading = 'eager';
+try { to(window.azHomeY()); } finally { html.classList.add('az-at'); }
+};
+d.addEventListener('DOMContentLoaded', function () { html.classList.add('az-at'); });
+}
+} else {
+var top0 = function () {
+if (location.hash) return;
+to(0);
+html.scrollTop = 0;
+if (d.body) d.body.scrollTop = 0;
+};
+top0();
+d.addEventListener('DOMContentLoaded', top0);
+window.addEventListener('pageshow', function (e) { if (!e.persisted) top0(); });
+}
+d.addEventListener('click', function (e) {
+if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+var a = e.target.closest ? e.target.closest('a[href]') : null;
+if (!a || a.hasAttribute('download') || a.hasAttribute('data-toast') || (a.target && a.target !== '_self')) return;
+var url;
+try { url = new URL(a.href, location.href); } catch (er) { return; }
+if (url.origin !== location.origin || url.protocol !== location.protocol) return;
+if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+var dest = url.href;
+var again = false;
+var logo = HOME ? null : d.querySelector('.logo');
+if (logo) {
+var home = new URL(logo.href, location.href);
+var p = read();
+if (p && url.pathname === home.pathname && (!url.hash || (url.hash === '#lavori' && p.s === 'lavori'))) {
+again = true;
+put('az-return', '1');
+url.hash = '';
+dest = url.href;
+}
+}
+put('az-nav', String(Date.now()));
+if (HOME) save();
+if (VT) {
+if (again) { e.preventDefault(); location.href = dest; }
+return;
+}
+e.preventDefault();
+html.classList.add('az-leave');
+setTimeout(function () { location.href = dest; }, 160);
+});
+})(false);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pagina non trovata | Alez Tech</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B0F19">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="/styles.css?v=42">
+</head>
+<body>
+<header class="site-header site-header--simple is-scrolled">
+  <a class="logo" href="/" aria-label="Alez Tech, torna alla home"><span class="logo-br">&lt;</span><span class="logo-az">AZ</span><span class="logo-br">&gt;</span><span class="logo-name">Alez Tech</span></a>
+  <a class="btn btn--small btn--primary header-cta" href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech.%20Ti%20racconto%20la%20mia%20attivit%C3%A0%3A%20" target="_blank" rel="noopener">Scrivimi</a>
+</header>
+<main class="doc">
+  <h1>Questa pagina non c'è</h1>
+  <p class="doc-lead">Forse il link è vecchio o c'è un errore di battitura. Da qui trovi tutto il resto.</p>
+  <nav class="doc-more" aria-label="Pagine del sito">
+    <a href="/">Home</a>
+    <a href="/sito-vetrina/">Sito vetrina</a>
+    <a href="/landing-page/">Landing page</a>
+    <a href="/e-commerce/">E-commerce</a>
+  </nav>
+</main>
+<footer class="site-footer">
+  <div class="footer-main"><p>© 2026 Alez Tech · Web &amp; Digital Studio di Alessandro, Vibo Valentia. WhatsApp <a href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech." target="_blank" rel="noopener">+39&nbsp;351&nbsp;838&nbsp;3865</a> · Email <a href="mailto:info@aleztech.it">info@aleztech.it</a></p></div>
+  <p class="footer-links"><a href="/privacy.html">Privacy</a><a href="/">Home</a></p>
+</footer>
+</body>
+</html>

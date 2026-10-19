@@ -1,0 +1,25 @@
+# Cloudflare Pages: intestazioni HTTP (il file non si vede sul sito)
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# CSS e JS hanno ?v=N nel link: quando cambiano si alza il numero. Un giorno di cache, poi si aggiorna in sottofondo.
+/*.css
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/*.js
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# anteprime dei lavori e immagini: cambiano di rado
+/lavori/*.webp
+  Cache-Control: public, max-age=2592000
+/og.jpg
+  Cache-Control: public, max-age=604800
+/favicon.svg
+  Cache-Control: public, max-age=604800
+/*.png
+  Cache-Control: public, max-age=604800
+# la foto di "Chi sono" ha ?v=N nel link: se la cambi, alza il numero
+/alessandro.webp
+  Cache-Control: public, max-age=2592000
