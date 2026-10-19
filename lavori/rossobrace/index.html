@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<style>/* sfondo scuro dal primo byte: tra una pagina e l'altra il browser non dipinge mai il bianco */:root{color-scheme:dark}html,body{background:#0B0F19}</style>
+<script id="nav">(function (HOME) {
+var d = document;
+var html = d.documentElement;
+var get = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+var put = function (k, v) {
+try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {  }
+};
+var read = function () { try { return JSON.parse(get('az-home')); } catch (e) { return null; } };
+var to = function (y) { try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); } };
+var nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+var type = nav ? nav.type : 'navigate';
+var VT = 'CSSViewTransitionRule' in window;
+var from = Number(get('az-nav')) || 0;
+put('az-nav', null);
+if (from && Date.now() - from < 10000) {
+var enter = function () {
+html.classList.add('az-enter');
+setTimeout(function () { html.classList.remove('az-enter'); }, 400);
+};
+if (!VT) enter();
+else if ('onpagereveal' in window) window.addEventListener('pagereveal', function (e) { if (!e.viewTransition) enter(); }, { once: true });
+}
+window.addEventListener('pageshow', function (e) { if (e.persisted) html.classList.remove('az-leave'); });
+var blocks = function () { return d.querySelectorAll('main > *, .work, .site-footer'); };
+var boxOf = function (el) {
+var p = el.parentNode;
+return p && p.classList && p.classList.contains('pin-spacer') ? p : el;
+};
+if (HOME) {
+var savedHomeScrollY = 0;
+var save = function () {
+savedHomeScrollY = window.scrollY || html.scrollTop;
+var list = blocks();
+var at = -1;
+var off = 0;
+for (var i = 0; i < list.length; i++) {
+var top = boxOf(list[i]).getBoundingClientRect().top;
+if (top <= 0.5) { at = i; off = -top; }
+}
+var sec = at < 0 ? null : list[at].closest('main > section');
+put('az-home', JSON.stringify({ y: savedHomeScrollY, i: at, o: Math.round(off), s: sec ? sec.id : '' }));
+};
+window.addEventListener('pagehide', save);
+var back = get('az-return') === '1';
+put('az-return', null);
+var pos = read();
+if (pos && (back || type === 'back_forward')) {
+html.classList.add('az-return');
+window.azHomeY = function () {
+var el = pos.i >= 0 ? blocks()[pos.i] : null;
+if (!el) return pos.y;
+return Math.max(0, Math.round(boxOf(el).getBoundingClientRect().top + (window.scrollY || html.scrollTop) + pos.o));
+};
+window.azBack = function () {
+var shots = d.querySelectorAll('.screen img.page');
+for (var k = 0; k < shots.length; k++) shots[k].loading = 'eager';
+try { to(window.azHomeY()); } finally { html.classList.add('az-at'); }
+};
+d.addEventListener('DOMContentLoaded', function () { html.classList.add('az-at'); });
+}
+} else {
+var top0 = function () {
+if (location.hash) return;
+to(0);
+html.scrollTop = 0;
+if (d.body) d.body.scrollTop = 0;
+};
+top0();
+d.addEventListener('DOMContentLoaded', top0);
+window.addEventListener('pageshow', function (e) { if (!e.persisted) top0(); });
+}
+d.addEventListener('click', function (e) {
+if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+var a = e.target.closest ? e.target.closest('a[href]') : null;
+if (!a || a.hasAttribute('download') || a.hasAttribute('data-toast') || (a.target && a.target !== '_self')) return;
+var url;
+try { url = new URL(a.href, location.href); } catch (er) { return; }
+if (url.origin !== location.origin || url.protocol !== location.protocol) return;
+if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+var dest = url.href;
+var again = false;
+var logo = HOME ? null : d.querySelector('.logo');
+if (logo) {
+var home = new URL(logo.href, location.href);
+var p = read();
+if (p && url.pathname === home.pathname && (!url.hash || (url.hash === '#lavori' && p.s === 'lavori'))) {
+again = true;
+put('az-return', '1');
+url.hash = '';
+dest = url.href;
+}
+}
+put('az-nav', String(Date.now()));
+if (HOME) save();
+if (VT) {
+if (again) { e.preventDefault(); location.href = dest; }
+return;
+}
+e.preventDefault();
+html.classList.add('az-leave');
+setTimeout(function () { location.href = dest; }, 160);
+});
+})(false);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rossobrace, demo di negozio online di prodotti piccanti calabresi | Alez Tech</title>
+<meta name="description" content="Demo interattiva di Alez Tech: negozio online di prodotti piccanti calabresi con catalogo filtrabile, carrello con totale e spedizione, recensioni di esempio e informazioni sulle spedizioni.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0B0F19">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="../../styles.css?v=42">
+<link rel="stylesheet" href="../lavori.css?v=10">
+</head>
+<body class="demo-page">
+<a class="skip" href="#contenuto">Vai al contenuto</a>
+<header class="demo-bar">
+  <a class="logo" href="../../" aria-label="Alez Tech, torna alla home"><span class="logo-br">&lt;</span><span class="logo-az">AZ</span><span class="logo-br">&gt;</span><span class="logo-name">Alez Tech</span></a>
+  <p class="demo-bar-note">Demo di Alez Tech: nome e attività sono di fantasia</p>
+  <a class="btn btn--small btn--ghost demo-bar-back" href="../../#lavori">Tutte le demo</a>
+</header>
+<div class="tour" data-tour-ui role="status" aria-live="polite" hidden>
+  <span class="tour-ic" aria-hidden="true"></span>
+  <span class="tour-text"></span>
+  <button class="tour-btn" type="button"></button>
+  <span class="tour-bar" aria-hidden="true"><i></i></span>
+</div>
+<main class="demo-main" id="contenuto">
+  <div class="d-window">
+    <div class="d-urlbar" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span><span class="d-url"><b>rossobrace</b>.aleztech.it</span></div>
+    <div class="demo d-brace">
+      <nav class="d-nav" aria-label="Rossobrace">
+        <a class="d-logo" href="#rb-home">Rossobrace</a>
+        <a class="d-nav-link" href="#rb-prodotti">Prodotti</a>
+        <a class="d-nav-link" href="#rb-recensioni">Recensioni</a>
+        <a class="d-nav-link" href="#rb-spedizioni">Spedizioni</a>
+        <a class="d-btn d-btn--small d-cart-btn" href="#rb-carrello">Carrello <em data-cart-count>0</em></a>
+      </nav>
+
+      <section class="d-hero" id="rb-home" data-tour aria-labelledby="rb-titolo">
+        <div class="d-wrap d-hero-grid">
+          <div class="d-hero-copy">
+            <p class="d-kicker">Bottega artigianale del peperoncino e salumi piccanti di Calabria</p>
+            <h1 class="d-h1" id="rb-titolo">Fatti a mano sulle colline calabresi, spediti in tutta Italia</h1>
+            <p class="d-lead">Piccoli lotti, carne di suino calabrese e il nostro peperoncino. Ordini oggi, ricevi tutto a casa in 48 ore.</p>
+            <div class="d-hero-actions">
+              <a class="d-btn" href="#rb-prodotti">Vai al negozio</a>
+              <a class="d-btn d-btn--ghost" href="#rb-spedizioni">Come spediamo</a>
+            </div>
+            <ul class="d-facts"><li>Spedizione gratis da 49 €</li><li>Consegna in 48 ore</li><li>Pagamento sicuro</li></ul>
+          </div>
+          <div class="brace-art" aria-hidden="true"><div class="jar"><span>PICCANTE</span></div></div>
+        </div>
+      </section>
+
+      <section class="d-sec" id="rb-prodotti" data-tour aria-labelledby="rb-prod-t">
+        <div class="d-wrap">
+          <div class="d-head">
+            <p class="d-kicker">Il catalogo</p>
+            <h2 class="d-h2" id="rb-prod-t">Scegli e aggiungi al carrello</h2>
+            <p class="d-lead">Filtra per tipo e tocca Aggiungi: carrello e totale si aggiornano subito.</p>
+          </div>
+          <div class="d-tabs" data-filters="#rb-prodotti [data-product]" role="group" aria-label="Filtra i prodotti">
+            <button class="d-chip" type="button" data-filter="tutti" aria-pressed="true">Tutti</button>
+            <button class="d-chip" type="button" data-filter="spalmabili" aria-pressed="false">Spalmabili</button>
+            <button class="d-chip" type="button" data-filter="salumi" aria-pressed="false">Salumi</button>
+            <button class="d-chip" type="button" data-filter="creme" aria-pressed="false">Creme e conserve</button>
+            <button class="d-chip" type="button" data-filter="regali" aria-pressed="false">Regali</button>
+          </div>
+          <p class="d-note d-count" aria-live="polite" data-filter-count>6 prodotti</p>
+          <ul class="d-grid">
+            <li class="d-card" data-product="classica" data-name="Spalmabile piccante calabrese 200 g" data-price="8.5" data-cat="spalmabili" data-start="2">
+              <div class="jar " aria-hidden="true"><span>PICCANTE</span></div>
+              <h3>Spalmabile piccante calabrese 200 g</h3>
+              <p>La ricetta di sempre, piccante il giusto.</p>
+              <div class="d-card-foot"><span class="d-price">8,50&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Spalmabile piccante calabrese 200 g al carrello">Aggiungi</button></div>
+            </li>
+            <li class="d-card" data-product="extra" data-name="Spalmabile riserva extra-piccante 200 g" data-price="9.0" data-cat="spalmabili">
+              <div class="jar jar--hot" aria-hidden="true"><span>EXTRA</span></div>
+              <h3>Spalmabile riserva extra-piccante 200 g</h3>
+              <p>Per chi lo vuole forte davvero.</p>
+              <div class="d-card-foot"><span class="d-price">9,00&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Spalmabile riserva extra-piccante 200 g al carrello">Aggiungi</button></div>
+            </li>
+            <li class="d-card" data-product="salame" data-name="Salame piccante artigianale 500 g" data-price="18.0" data-cat="salumi">
+              <div class="jar jar--log" aria-hidden="true"><span>SALAME</span></div>
+              <h3>Salame piccante artigianale 500 g</h3>
+              <p>Stagionato in bottega, da affettare sottile.</p>
+              <div class="d-card-foot"><span class="d-price">18,00&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Salame piccante artigianale 500 g al carrello">Aggiungi</button></div>
+            </li>
+            <li class="d-card" data-product="crema" data-name="Crema di peperoncino macinato 180 g" data-price="7.0" data-cat="creme">
+              <div class="jar jar--cream" aria-hidden="true"><span>CREMA</span></div>
+              <h3>Crema di peperoncino macinato 180 g</h3>
+              <p>Sul pane, sulla pizza, nel sugo.</p>
+              <div class="d-card-foot"><span class="d-price">7,00&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Crema di peperoncino macinato 180 g al carrello">Aggiungi</button></div>
+            </li>
+            <li class="d-card" data-product="cipolla" data-name="Cipolle rosse in agrodolce 280 g" data-price="6.5" data-cat="creme">
+              <div class="jar jar--onion" aria-hidden="true"><span>CIPOLLA</span></div>
+              <h3>Cipolle rosse in agrodolce 280 g</h3>
+              <p>Cipolle rosse, aceto e zucchero di canna.</p>
+              <div class="d-card-foot"><span class="d-price">6,50&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Cipolle rosse in agrodolce 280 g al carrello">Aggiungi</button></div>
+            </li>
+            <li class="d-card" data-product="cofanetto" data-name="Cofanetto degustazione Calabria" data-price="29.0" data-cat="regali">
+              <div class="jar jar--box" aria-hidden="true"><span>REGALO</span></div>
+              <h3>Cofanetto degustazione Calabria</h3>
+              <p>Spalmabile piccante, riserva extra-piccante e crema di peperoncino, in scatola da regalo.</p>
+              <div class="d-card-foot"><span class="d-price">29,00&nbsp;€</span><button class="d-btn d-btn--small" type="button" data-add aria-label="Aggiungi Cofanetto degustazione Calabria al carrello">Aggiungi</button></div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="d-sec" id="rb-carrello" data-tour aria-labelledby="rb-cart-t">
+        <div class="d-wrap">
+          <div class="d-head">
+            <p class="d-kicker">Prova il carrello</p>
+            <h2 class="d-h2" id="rb-cart-t">Il tuo carrello</h2>
+            <p class="d-lead">Cambia le quantità: totale e spedizione si ricalcolano mentre tocchi.</p>
+          </div>
+          <div class="d-book" data-cart data-free-over="49" data-ship="6.90">
+            <ul class="d-cart-lines" data-cart-list aria-live="polite"></ul>
+            <aside class="d-summary" aria-labelledby="rb-sum-t">
+              <h3 id="rb-sum-t">Riepilogo</h3>
+              <div class="d-ship"><span data-ship-text></span><span class="d-ship-bar" aria-hidden="true"><i data-ship-bar></i></span></div>
+              <div class="d-sum-rows"><div><span>Prodotti</span><span data-subtotal></span></div><div><span>Spedizione</span><span data-shipping></span></div></div>
+              <p class="d-total"><span>Totale</span><span data-cart-total></span></p>
+              <button class="d-btn" type="button" data-checkout>Vai alla cassa</button>
+              <div class="d-result" data-cart-result hidden>
+                <p class="d-msg-to">Ordine di prova completato</p>
+                <p><span data-cart-summary></span> Nella demo non si paga niente. Sul sito vero qui ci sono carta e PayPal, e al negozio arriva subito l'avviso del nuovo ordine.</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="d-sec" id="rb-recensioni" data-tour aria-labelledby="rb-rec-t">
+        <div class="d-wrap">
+          <div class="d-head">
+            <p class="d-kicker">Perché ordinano di nuovo</p>
+            <h2 class="d-h2" id="rb-rec-t">Il piccante delle vacanze, a casa tua</h2>
+          </div>
+          <ul class="d-strengths">
+            <li><b>Piccoli lotti</b><span>Ne prepariamo poco alla volta, così quello che spediamo è sempre fresco.</span></li>
+            <li><b>Imballata bene</b><span>Vasetti protetti e scatola robusta: arriva integra anche in piena estate.</span></li>
+            <li><b>Reso semplice</b><span>Se un vasetto arriva rotto te lo rimandiamo, senza spese e senza moduli.</span></li>
+          </ul>
+          <ul class="d-reviews">
+            <li class="d-review"><span class="d-stars" role="img" aria-label="5 stelle su 5">★★★★★</span><p>Arrivata in due giorni, imballata benissimo. La piccante extra è piccante davvero.</p><cite>Paolo, Torino</cite></li>
+            <li class="d-review"><span class="d-stars" role="img" aria-label="5 stelle su 5">★★★★★</span><p>Ho preso il cofanetto come regalo: bello da vedere, e la crema di peperoncino è finita in una sera.</p><cite>Sara, Bologna</cite></li>
+            <li class="d-review"><span class="d-stars" role="img" aria-label="5 stelle su 5">★★★★★</span><p>Finalmente lo stesso piccante che compro in vacanza in Calabria, senza doverlo chiedere ai parenti.</p><cite>Andrea, Roma</cite></li>
+          </ul>
+          <p class="d-sample">Recensioni di esempio: nel sito vero qui ci sono quelle dei clienti del negozio.</p>
+        </div>
+      </section>
+
+      <section class="d-sec" id="rb-spedizioni" data-tour aria-labelledby="rb-sped-t">
+        <div class="d-wrap d-info">
+          <div>
+            <div class="d-head"><p class="d-kicker">Spedizioni e laboratorio</p><h2 class="d-h2" id="rb-sped-t">Come e quando arriva</h2></div>
+            <dl class="d-hours">
+              <div><dt>Italia</dt><dd>48 ore, 6,90 € (gratis da 49 €)</dd></div>
+              <div><dt>Sicilia e Sardegna</dt><dd>72 ore, 9,90 €</dd></div>
+              <div><dt>Ritiro in laboratorio</dt><dd>gratis</dd></div>
+              <div><dt>Laboratorio aperto</dt><dd>lun-ven 8:30-13:00 e 15:00-18:00</dd></div>
+            </dl>
+            <div class="d-where">
+              <p><b>Bottega e laboratorio sulle colline calabresi</b><br>Nell'entroterra, a pochi chilometri dal mare.</p>
+              <div class="d-where-actions">
+                <a class="d-btn d-btn--small" href="#rb-spedizioni" data-toast="Sul sito vero questo pulsante apre WhatsApp per scrivere al negozio.">Scrivici su WhatsApp</a>
+                <a class="d-btn d-btn--small d-btn--ghost" href="#rb-spedizioni" data-toast="Sul sito vero questo pulsante apre Google Maps con l'indirizzo del laboratorio.">Indicazioni</a>
+              </div>
+            </div>
+          </div>
+          <div class="d-map" role="img" aria-label="Mappa disegnata: il laboratorio è in collina, a pochi chilometri dal mare">
+            <i class="water" style="left:0;top:0;bottom:0;width:26%;border-radius:0 40% 30% 0"></i>
+            <i class="park" style="left:44%;top:12%;width:30%;height:26%"></i>
+            <i class="park" style="left:62%;top:58%;width:28%;height:24%"></i>
+            <i class="road" style="left:22%;top:48%;width:72%;transform:rotate(-8deg)"></i>
+            <i class="road" style="left:30%;top:82%;width:60%;transform:rotate(-24deg)"></i>
+            <span class="d-pin" style="left:58%;top:46%"><b>Rossobrace</b><i></i></span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="d-foot" data-tour>
+        <div class="d-wrap">
+          <div class="d-foot-grid">
+            <div><a class="d-logo" href="#rb-home">Rossobrace</a><p>Peperoncino, salumi piccanti e conserve, fatti a mano in Calabria.</p></div>
+            <nav class="d-foot-links" aria-label="Link del negozio">
+              <a href="#rb-spedizioni">Spedizioni</a>
+              <a href="#rb-home" data-toast="Sul sito vero apre la pagina dei resi.">Resi</a>
+              <a href="#rb-home" data-toast="Sul sito vero apre le condizioni di vendita.">Condizioni di vendita</a>
+              <a href="#rb-home" data-toast="Sul sito vero apre l'informativa privacy del negozio.">Privacy</a>
+            </nav>
+          </div>
+          <p class="d-foot-note">Progetto dimostrativo ideato da Alez Tech a scopo puramente illustrativo: nomi, luoghi, prodotti e listini sono di fantasia.</p>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <section class="demo-cta" data-tour aria-labelledby="demo-cta-t">
+    <h2 id="demo-cta-t">Vuoi vendere online i tuoi prodotti?</h2>
+    <p>Catalogo, carrello, pagamenti e spedizioni chiare prima della cassa. Lo costruisco su misura per il tuo negozio.</p>
+    <div class="demo-cta-actions">
+      <a class="btn btn--primary btn--cta" href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech%3A%20ho%20provato%20la%20demo%20Rossobrace%20e%20vorrei%20un%20negozio%20online%20cos%C3%AC%20per%20i%20miei%20prodotti.%20La%20mia%20attivit%C3%A0%20%C3%A8%3A%20" target="_blank" rel="noopener">Vorrei un sito così: scrivimi su WhatsApp</a>
+      <a class="btn btn--ghost" href="../../#prezzi">Guarda i prezzi</a>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="footer-main"><p>© 2026 Alez Tech · Web &amp; Digital Studio di Alessandro, Vibo Valentia. WhatsApp <a href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech%3A%20ho%20provato%20la%20demo%20Rossobrace%20e%20vorrei%20un%20negozio%20online%20cos%C3%AC%20per%20i%20miei%20prodotti.%20La%20mia%20attivit%C3%A0%20%C3%A8%3A%20" target="_blank" rel="noopener">+39&nbsp;351&nbsp;838&nbsp;3865</a> · Email <a href="mailto:info@aleztech.it">info@aleztech.it</a></p></div>
+  <p class="footer-links"><a href="../../privacy.html">Privacy</a><a href="../../">Home</a></p>
+</footer>
+<div class="d-toast" role="status" aria-live="polite" hidden></div>
+<script src="../demo.js?v=7" defer></script>
+</body>
+</html>

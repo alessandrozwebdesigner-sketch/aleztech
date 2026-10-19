@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<style>/* sfondo scuro dal primo byte: tra una pagina e l'altra il browser non dipinge mai il bianco */:root{color-scheme:dark}html,body{background:#0B0F19}</style>
+<script id="nav">(function (HOME) {
+var d = document;
+var html = d.documentElement;
+var get = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+var put = function (k, v) {
+try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {  }
+};
+var read = function () { try { return JSON.parse(get('az-home')); } catch (e) { return null; } };
+var to = function (y) { try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); } };
+var nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+var type = nav ? nav.type : 'navigate';
+var VT = 'CSSViewTransitionRule' in window;
+var from = Number(get('az-nav')) || 0;
+put('az-nav', null);
+if (from && Date.now() - from < 10000) {
+var enter = function () {
+html.classList.add('az-enter');
+setTimeout(function () { html.classList.remove('az-enter'); }, 400);
+};
+if (!VT) enter();
+else if ('onpagereveal' in window) window.addEventListener('pagereveal', function (e) { if (!e.viewTransition) enter(); }, { once: true });
+}
+window.addEventListener('pageshow', function (e) { if (e.persisted) html.classList.remove('az-leave'); });
+var blocks = function () { return d.querySelectorAll('main > *, .work, .site-footer'); };
+var boxOf = function (el) {
+var p = el.parentNode;
+return p && p.classList && p.classList.contains('pin-spacer') ? p : el;
+};
+if (HOME) {
+var savedHomeScrollY = 0;
+var save = function () {
+savedHomeScrollY = window.scrollY || html.scrollTop;
+var list = blocks();
+var at = -1;
+var off = 0;
+for (var i = 0; i < list.length; i++) {
+var top = boxOf(list[i]).getBoundingClientRect().top;
+if (top <= 0.5) { at = i; off = -top; }
+}
+var sec = at < 0 ? null : list[at].closest('main > section');
+put('az-home', JSON.stringify({ y: savedHomeScrollY, i: at, o: Math.round(off), s: sec ? sec.id : '' }));
+};
+window.addEventListener('pagehide', save);
+var back = get('az-return') === '1';
+put('az-return', null);
+var pos = read();
+if (pos && (back || type === 'back_forward')) {
+html.classList.add('az-return');
+window.azHomeY = function () {
+var el = pos.i >= 0 ? blocks()[pos.i] : null;
+if (!el) return pos.y;
+return Math.max(0, Math.round(boxOf(el).getBoundingClientRect().top + (window.scrollY || html.scrollTop) + pos.o));
+};
+window.azBack = function () {
+var shots = d.querySelectorAll('.screen img.page');
+for (var k = 0; k < shots.length; k++) shots[k].loading = 'eager';
+try { to(window.azHomeY()); } finally { html.classList.add('az-at'); }
+};
+d.addEventListener('DOMContentLoaded', function () { html.classList.add('az-at'); });
+}
+} else {
+var top0 = function () {
+if (location.hash) return;
+to(0);
+html.scrollTop = 0;
+if (d.body) d.body.scrollTop = 0;
+};
+top0();
+d.addEventListener('DOMContentLoaded', top0);
+window.addEventListener('pageshow', function (e) { if (!e.persisted) top0(); });
+}
+d.addEventListener('click', function (e) {
+if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+var a = e.target.closest ? e.target.closest('a[href]') : null;
+if (!a || a.hasAttribute('download') || a.hasAttribute('data-toast') || (a.target && a.target !== '_self')) return;
+var url;
+try { url = new URL(a.href, location.href); } catch (er) { return; }
+if (url.origin !== location.origin || url.protocol !== location.protocol) return;
+if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+var dest = url.href;
+var again = false;
+var logo = HOME ? null : d.querySelector('.logo');
+if (logo) {
+var home = new URL(logo.href, location.href);
+var p = read();
+if (p && url.pathname === home.pathname && (!url.hash || (url.hash === '#lavori' && p.s === 'lavori'))) {
+again = true;
+put('az-return', '1');
+url.hash = '';
+dest = url.href;
+}
+}
+put('az-nav', String(Date.now()));
+if (HOME) save();
+if (VT) {
+if (again) { e.preventDefault(); location.href = dest; }
+return;
+}
+e.preventDefault();
+html.classList.add('az-leave');
+setTimeout(function () { location.href = dest; }, 160);
+});
+})(false);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sito vetrina da 400 € | Alez Tech, Vibo Valentia</title>
+<meta name="description" content="Un sito vetrina fino a 5 pagine per presentare la tua attività: 400 €, pronto entro 15 giorni. Alez Tech, Vibo Valentia: lavoro in Calabria e in tutta Italia.">
+<link rel="canonical" href="https://aleztech.it/sito-vetrina/">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#0B0F19">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Alez Tech">
+<meta property="og:title" content="Sito vetrina da 400 € | Alez Tech, Vibo Valentia">
+<meta property="og:description" content="Un sito vetrina fino a 5 pagine per presentare la tua attività: 400 €, pronto entro 15 giorni. Alez Tech, Vibo Valentia: lavoro in Calabria e in tutta Italia.">
+<meta property="og:url" content="https://aleztech.it/sito-vetrina/">
+<meta property="og:image" content="https://aleztech.it/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sito vetrina da 400 € | Alez Tech, Vibo Valentia">
+<meta name="twitter:description" content="Un sito vetrina fino a 5 pagine per presentare la tua attività: 400 €, pronto entro 15 giorni. Alez Tech, Vibo Valentia: lavoro in Calabria e in tutta Italia.">
+<meta name="twitter:image" content="https://aleztech.it/og.jpg">
+<meta name="twitter:image:alt" content="Alez Tech, Vibo Valentia: siti che portano clienti">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="../styles.css?v=42">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Service","name":"Sito vetrina","url":"https://aleztech.it/sito-vetrina/","description":"Un sito vetrina fino a 5 pagine per presentare la tua attività: 400 €, pronto entro 15 giorni. Alez Tech, Vibo Valentia: lavoro in Calabria e in tutta Italia.","provider":{"@type":"ProfessionalService","@id":"https://aleztech.it/#attivita","name":"Alez Tech","url":"https://aleztech.it/","telephone":"+393518383865","address":{"@type":"PostalAddress","addressLocality":"Vibo Valentia","addressRegion":"VV","addressCountry":"IT"},"email":"info@aleztech.it"},"areaServed":[{"@type":"AdministrativeArea","name":"Calabria"},{"@type":"Country","name":"Italia"}],"offers":{"@type":"Offer","price":"400","priceCurrency":"EUR","url":"https://aleztech.it/sito-vetrina/"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://aleztech.it/"},{"@type":"ListItem","position":2,"name":"Sito vetrina","item":"https://aleztech.it/sito-vetrina/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Quanto tempo serve?","acceptedAnswer":{"@type":"Answer","text":"Un sito vetrina è pronto entro 15 giorni. I tempi partono da quando ho testi e foto: se non li hai ancora, li prepariamo insieme."}},{"@type":"Question","name":"Si vede bene sul telefono?","acceptedAnswer":{"@type":"Answer","text":"Lo disegno partendo dal telefono, perché è da lì che arriva la maggior parte delle visite. Prima della consegna lo provo su schermi piccoli e grandi."}},{"@type":"Question","name":"Dominio e hosting sono compresi?","acceptedAnswer":{"@type":"Answer","text":"No, sono a parte. Il costo dipende dal progetto e te lo dico prima di iniziare, così sai già quanto spendi ogni anno."}},{"@type":"Question","name":"Il sito sarà mio?","acceptedAnswer":{"@type":"Answer","text":"Sì. Dominio e hosting sono intestati a te e alla consegna ricevi tutti gli accessi."}}]}]}</script>
+</head>
+<body>
+<a class="skip" href="#contenuto">Vai al contenuto</a>
+<header class="site-header site-header--simple is-scrolled">
+  <a class="logo" href="../" aria-label="Alez Tech, torna alla home"><span class="logo-br">&lt;</span><span class="logo-az">AZ</span><span class="logo-br">&gt;</span><span class="logo-name">Alez Tech</span></a>
+  <a class="btn btn--small btn--primary header-cta" href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech.%20Ho%20una%20domanda%20sul%20sito%20vetrina%3A%20" target="_blank" rel="noopener">Scrivimi</a>
+</header>
+<main class="doc" id="contenuto">
+  <nav class="doc-crumbs" aria-label="Percorso"><a href="../">Home</a><span aria-hidden="true">/</span><span aria-current="page">Sito vetrina</span></nav>
+  <h1>Sito vetrina: la tua attività, spiegata bene</h1>
+  <p class="doc-lead">Fino a 5 pagine per dire chi sei, cosa fai, dove ti trovano e come contattarti. È il pacchetto che consiglio alla maggior parte delle attività.</p>
+  <div class="doc-price">
+      <p class="doc-price-tag">Promo lancio nuovi clienti</p>
+      <strong><span class="sr-only">Prezzo di lancio: </span>400 €</strong>
+      <p class="doc-price-was"><span class="sr-only">Prezzo dopo il lancio: </span><s>750&nbsp;€</s><span aria-hidden="true"> dopo il lancio</span></p>
+      <span>Pronto entro 15 giorni. Il prezzo lo blocco per iscritto prima di iniziare. I tempi partono da quando ho testi e foto.</span>
+      <a class="btn btn--primary" href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech.%20Vorrei%20informazioni%20sul%20sito%20vetrina%20in%20promo%20lancio%20a%20400%20%E2%82%AC." target="_blank" rel="noopener">Chiedi il preventivo gratis</a>
+    </div>
+    <section>
+      <h2>Cosa comprende</h2>
+      <ul>
+        <li>Pagine come chi siamo, servizi, galleria e contatti</li>
+        <li>Mappa, orari e pulsante per chiamare</li>
+        <li>Impostazioni di base per farti trovare su Google</li>
+        <li>Versione per telefono e computer</li>
+      </ul>
+      <p>Dominio e hosting sono a parte: il costo dipende dal progetto e te lo dico prima di iniziare.</p>
+    </section>
+    <section>
+      <h2>Le pagine, di solito</h2>
+      <p>Ogni attività è diversa, ma lo schema che funziona quasi sempre è questo:</p>
+      <ul>
+        <li><b>Home:</b> chi sei in una frase, la foto giusta e il pulsante per scriverti</li>
+        <li><b>Chi siamo:</b> la tua storia e le persone che ci lavorano</li>
+        <li><b>Servizi, prodotti o menu:</b> cosa offri, spiegato in modo semplice</li>
+        <li><b>Galleria:</b> foto vere del locale, dei lavori o dei prodotti</li>
+        <li><b>Contatti:</b> mappa, orari, telefono e WhatsApp</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Farti trovare su Google</h2>
+      <p>Le impostazioni di base sono quelle che servono a Google per capire chi sei, dove sei e cosa fai: un titolo e una descrizione per ogni pagina, nome, indirizzo e orari scritti in un formato che legge, la mappa del sito.</p>
+      <p>Conta molto anche la scheda Google della tua attività, quella che compare su Maps. Nome, telefono e orari devono essere gli stessi sul sito, sulla scheda e su Instagram.</p>
+    </section>
+    <section>
+      <h2>Come lo costruisco</h2>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n" aria-hidden="true">01</span>
+          <div>
+            <h3>Mi scrivi su WhatsApp</h3>
+            <p>Mi racconti cosa fai e cosa ti serve. Se hai già un sito o una pagina Instagram, mandami il link. Il preventivo è gratis.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">02</span>
+          <div>
+            <h3>Ti mostro la bozza</h3>
+            <p>Ti mando un link e vedi la grafica sul tuo telefono e sul computer, prima che scriva il codice. Cambiamo insieme quello che non ti convince.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">03</span>
+          <div>
+            <h3>Costruisco il sito</h3>
+            <p>Sviluppo le pagine e le provo su telefoni e schermi diversi, così si aprono in fretta anche con poco segnale.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">04</span>
+          <div>
+            <h3>Va online</h3>
+            <p>Ti aiuto a scegliere dominio e hosting e pubblico il sito. Da lì in poi sai a chi scrivere se c'è da cambiare qualcosa.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+    <section>
+      <h2>Due esempi</h2>
+      <p>Due siti vetrina demo di Alez Tech, con nomi e attività di fantasia: <a href="../lavori/dodici-braccia/?v=41">Dodici Braccia</a>, un'osteria di mare, e <a href="../lavori/studio-cuspide/?v=41">Studio Cuspide</a>, uno studio dentistico.</p>
+    </section>
+    <section>
+      <h2>Domande</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Quanto tempo serve?</summary>
+          <p>Un sito vetrina è pronto entro 15 giorni. I tempi partono da quando ho testi e foto: se non li hai ancora, li prepariamo insieme.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Si vede bene sul telefono?</summary>
+          <p>Lo disegno partendo dal telefono, perché è da lì che arriva la maggior parte delle visite. Prima della consegna lo provo su schermi piccoli e grandi.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Dominio e hosting sono compresi?</summary>
+          <p>No, sono a parte. Il costo dipende dal progetto e te lo dico prima di iniziare, così sai già quanto spendi ogni anno.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Il sito sarà mio?</summary>
+          <p>Sì. Dominio e hosting sono intestati a te e alla consegna ricevi tutti gli accessi.</p>
+        </details>
+      </div>
+    </section>
+    <section class="doc-cta">
+      <h2>Raccontami la tua attività</h2>
+      <p>Scrivimi due righe su WhatsApp. Ti rispondo io, con un'idea e un prezzo.</p>
+      <a class="btn btn--big" href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech.%20Vorrei%20un%20sito%20vetrina%20per%20la%20mia%20attivit%C3%A0%3A%20" target="_blank" rel="noopener">Scrivimi su WhatsApp</a>
+    </section>
+    <nav class="doc-more" aria-label="Altre pagine">
+      <a href="../landing-page/">Landing page</a>
+      <a href="../e-commerce/">E-commerce</a>
+      <a href="../#lavori">Demo</a>
+    </nav>
+</main>
+<footer class="site-footer">
+  <div class="footer-main"><p>© 2026 Alez Tech · Web &amp; Digital Studio di Alessandro, Vibo Valentia. WhatsApp <a href="https://wa.me/393518383865?text=Ciao%20Alessandro%2C%20ti%20scrivo%20dal%20sito%20Alez%20Tech." target="_blank" rel="noopener">+39&nbsp;351&nbsp;838&nbsp;3865</a> · Email <a href="mailto:info@aleztech.it">info@aleztech.it</a></p></div>
+  <p class="footer-links"><a href="../privacy.html">Privacy</a><a href="../">Home</a></p>
+</footer>
+<script src="../steps.js?v=3" defer></script>
+</body>
+</html>

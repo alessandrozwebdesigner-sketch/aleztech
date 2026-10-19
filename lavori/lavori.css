@@ -1,0 +1,554 @@
+/* Alez Tech: le quattro demo interattive (Dodici Braccia, Rossobrace, Studio Cuspide, Planata).
+   Ogni demo e' un sito completo dentro una finestra del browser disegnata: menu con schede o filtri,
+   prenotazione o carrello che calcolano davvero, recensioni o domande, orari e mappa, footer.
+   Niente foto e niente font in piu': i disegni sono CSS e i caratteri sono gli stessi del sito (o Georgia).
+   Ogni demo ha i suoi colori nelle variabili --d-*; i componenti sono gli stessi per tutte. */
+
+/* ---------- Cornice di Alez Tech: barra in alto, avviso del tour, finestra, invito finale ---------- */
+/* barra alta 60 px piu' l'eventuale spazio di sistema in alto (tacca, app a schermo intero): la pillola del tour
+   sta 8 px sotto la barra e la finestra della demo parte 12 px sotto la pillola, con qualsiasi telefono */
+.demo-page { padding-top: calc(60px + env(safe-area-inset-top, 0px)); }
+.demo-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: calc(60px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) var(--gutter) 0;
+  background: rgba(11, 15, 25, .94);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+.demo-bar .logo { font-size: 1.3rem; }
+.demo-bar-note { margin: 0; color: var(--nebbia); font-size: .85rem; }
+.demo-bar-back { margin-left: auto; }
+@media (max-width: 640px) { .demo-bar-note { display: none; } }
+
+/* il tour: una pillola sotto la barra, con la barra di avanzamento. Alta sempre 52 px, in corsa e in pausa, con il
+   testo su una riga o su due: cambiando testo non cambia misura (ed essendo fissa non tocca comunque la pagina) */
+.tour {
+  position: fixed;
+  top: calc(68px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  z-index: 59;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  box-sizing: border-box;
+  padding: 6px 6px 6px 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, .96);
+  box-shadow: inset 0 0 0 1px rgba(129, 140, 248, .45), 0 14px 34px -12px rgba(2, 6, 23, .9);
+  color: var(--latte);
+  font: 600 .8rem/1.25 var(--f-body);
+  transform: translateX(-50%);
+  transition: opacity .3s;
+}
+.tour[hidden] { display: none; }
+/* pillola del tour e comandi della demo: toccarli non seleziona il testo */
+.tour, .d-btn, .d-chip, .d-tab, .d-step { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tour-ic { position: relative; flex: none; width: 10px; height: 12px; background: #22C55E; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.tour[data-state="paused"] .tour-ic, .tour[data-state="done"] .tour-ic { width: 10px; height: 10px; border-radius: 2px; background: var(--indaco-luce); clip-path: none; }
+.tour[data-state="running"] .tour-ic, .tour[data-state="waiting"] .tour-ic { animation: tour-blink 1.2s ease-in-out infinite; }
+@keyframes tour-blink { 50% { opacity: .35; } }
+.tour-text { min-width: 0; }
+.tour-btn {
+  flex: none;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--indaco);
+  color: #FFFFFF;
+  font: 700 .78rem/1 var(--f-body);
+  cursor: pointer;
+}
+.tour-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .08); }
+.tour-bar i { position: absolute; inset: 0; background: linear-gradient(90deg, var(--indaco-luce), var(--ciano)); transform: scaleX(0); transform-origin: left; }
+
+.demo-main { display: grid; gap: clamp(40px, 6vw, 72px); padding: 72px 0 clamp(56px, 8vw, 96px); }
+/* nella griglia una fila di schede lunga allargherebbe la finestra oltre lo schermo: le schede scorrono dentro */
+.demo-main > * { min-width: 0; }
+.d-tabs { max-width: 100%; }
+.d-window {
+  width: min(100% - 2 * var(--gutter), 1240px);
+  margin-inline: auto;
+  overflow: clip;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px var(--linea), 0 50px 90px -40px var(--ombra);
+}
+@media (max-width: 640px) { .d-window { width: 100%; border-radius: 0; box-shadow: none; } }
+.d-urlbar { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 14px; background: #111827; }
+.d-urlbar .dots { display: flex; gap: 6px; }
+.d-urlbar .dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(148, 163, 184, .35); }
+.d-url {
+  min-width: 0;
+  margin-inline: auto;
+  padding: 3px 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #0B0F19;
+  color: var(--nebbia);
+  font-size: .75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.d-url b { color: var(--latte); font-weight: 600; }
+
+.demo-cta { display: grid; justify-items: start; gap: 16px; width: min(100% - 2 * var(--gutter), 1240px); margin-inline: auto; }
+.demo-cta h2 { margin: 0; font-family: var(--f-display); font-size: clamp(1.9rem, 4.4vw, 3rem); line-height: 1.05; letter-spacing: -.02em; text-wrap: balance; }
+.demo-cta p { margin: 0; max-width: 40rem; color: var(--nebbia); font-size: var(--t-lead); }
+.demo-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 640px) { .demo-cta .btn--cta { width: 100%; white-space: normal; } }
+
+/* ---------- La demo: base comune ---------- */
+.demo {
+  --d-radius: 14px;
+  --d-max: 1080px;
+  background: var(--d-bg);
+  color: var(--d-ink);
+  font-family: var(--d-body, var(--f-body));
+  font-size: 16px;
+  line-height: 1.55;
+}
+.demo [id] { scroll-margin-top: 120px; }
+.demo h1, .demo h2, .demo h3, .demo p, .demo dl, .demo dd, .demo ul, .demo ol { margin: 0; }
+.demo ul, .demo ol { padding: 0; list-style: none; }
+/* :where() tiene queste due regole leggerissime: pulsanti e link con una classe decidono da soli font e colore */
+:where(.demo) a { color: inherit; }
+:where(.demo) button { font: inherit; color: inherit; }
+.d-wrap { width: 100%; max-width: var(--d-max); margin-inline: auto; padding-inline: clamp(18px, 4vw, 40px); }
+.d-sec { padding-block: clamp(56px, 9vw, 96px); }
+.d-sec + .d-sec { border-top: 1px solid var(--d-line); }
+.d-head { display: grid; gap: 10px; max-width: 42rem; margin-bottom: clamp(24px, 4vw, 40px); }
+.d-kicker { color: var(--d-accent-text, var(--d-accent)); font-size: .85rem; font-weight: 700; letter-spacing: .02em; }
+.d-h1 { font-family: var(--d-head); font-size: clamp(2.3rem, 6.4vw, 4.4rem); line-height: 1; letter-spacing: -.02em; text-wrap: balance; }
+.d-h2 { font-family: var(--d-head); font-size: clamp(1.8rem, 4.4vw, 2.8rem); line-height: 1.05; letter-spacing: -.015em; text-wrap: balance; }
+.d-lead { color: var(--d-muted); font-size: clamp(1.02rem, 1.6vw, 1.15rem); }
+.d-note { color: var(--d-muted); font-size: .85rem; }
+
+/* barra di navigazione del sito finto */
+.d-nav { display: flex; align-items: center; gap: clamp(14px, 3vw, 32px); padding: 16px clamp(18px, 4vw, 40px); }
+.d-logo { margin-right: auto; font-family: var(--d-head); font-size: 1.3rem; font-weight: 800; line-height: 1; text-decoration: none; }
+.d-nav-link { font-size: .95rem; font-weight: 600; text-decoration: none; opacity: .85; }
+.d-nav-link:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 720px) { .d-nav-link { display: none; } }
+
+/* pulsanti */
+.d-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--d-accent);
+  color: var(--d-on-accent);
+  font: 700 1rem/1 var(--f-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .15s var(--ease-out), opacity .2s;
+}
+.demo a.d-btn, .demo button.d-btn { color: var(--d-on-accent); }
+.d-btn:active { transform: scale(.97); }
+.d-btn:disabled { opacity: .4; cursor: not-allowed; }
+.d-btn--ghost { background: transparent; color: var(--d-ink); box-shadow: inset 0 0 0 1.5px var(--d-line-strong, var(--d-line)); }
+.demo a.d-btn--ghost, .demo button.d-btn--ghost { color: var(--d-ink); }
+.d-btn--small { min-height: 38px; padding: 0 16px; font-size: .9rem; }
+.d-btn:focus-visible, .d-chip:focus-visible, .d-tab:focus-visible, .d-step:focus-visible { outline: 3px solid var(--d-focus, var(--ciano)); outline-offset: 2px; }
+
+/* hero */
+.d-hero { position: relative; overflow: hidden; }
+.d-hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: clamp(24px, 5vw, 64px); padding-block: clamp(40px, 7vw, 88px); }
+.d-hero-copy { display: grid; justify-items: start; gap: 18px; }
+.d-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.d-facts { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--d-muted); font-size: .9rem; font-weight: 600; }
+.d-facts li { display: inline-flex; align-items: center; gap: 7px; }
+.d-facts li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--d-accent); }
+@media (max-width: 760px) { .d-hero-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* schede (menu, trattamenti, corsi) e filtri */
+.d-tabs { display: flex; gap: 8px; margin-bottom: 24px; padding-bottom: 4px; overflow-x: auto; scrollbar-width: none; }
+.d-tabs::-webkit-scrollbar { display: none; }
+.d-tab, .d-chip {
+  flex: none;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--d-soft);
+  color: var(--d-ink);
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .2s, color .2s, transform .15s var(--ease-out);
+}
+.d-tab:active, .d-chip:active { transform: scale(.96); }
+.d-tab[aria-selected="true"], .d-chip[aria-pressed="true"] { background: var(--d-accent); color: var(--d-on-accent); }
+.d-chip:disabled { opacity: .45; text-decoration: line-through; cursor: not-allowed; }
+.d-panel { animation: d-in .35s var(--ease-out); }
+@keyframes d-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* righe del menu e dei listini */
+.d-rows { display: grid; }
+.d-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; padding: 16px 0; border-bottom: 1px solid var(--d-line); }
+.d-row b { font-size: 1.08rem; }
+.d-row span { grid-column: 1; color: var(--d-muted); font-size: .92rem; }
+.d-row em { grid-column: 2; grid-row: 1; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* schede prodotto */
+.d-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 16px; }
+.d-card { display: grid; gap: 10px; align-content: start; padding: 18px; border-radius: var(--d-radius); background: var(--d-card); }
+.d-card[hidden] { display: none; }
+.d-card h3 { font-size: 1.05rem; line-height: 1.25; }
+.d-card p { color: var(--d-muted); font-size: .9rem; }
+.d-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.d-price { font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* prenotazione e carrello */
+.d-book { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: clamp(20px, 4vw, 40px); align-items: start; }
+@media (max-width: 860px) { .d-book { grid-template-columns: minmax(0, 1fr); } }
+.d-fields { display: grid; gap: 22px; }
+.d-field { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.d-field legend, .d-label { padding: 0; font-size: .9rem; font-weight: 700; }
+.d-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.d-stepper { display: inline-flex; align-items: center; gap: 6px; padding: 4px; border-radius: 999px; background: var(--d-soft); justify-self: start; }
+.d-step { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--d-card); color: var(--d-ink); font-size: 1.3rem; font-weight: 700; line-height: 1; cursor: pointer; }
+.d-step:disabled { opacity: .35; cursor: not-allowed; }
+.d-stepper output { min-width: 3.2em; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+.d-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid var(--d-line-strong, var(--d-line));
+  border-radius: 12px;
+  background: var(--d-card);
+  color: var(--d-ink);
+  font: inherit;
+}
+.d-input:focus { outline: 3px solid var(--d-focus, var(--ciano)); outline-offset: 1px; }
+.d-summary { display: grid; gap: 14px; padding: 22px; border-radius: var(--d-radius); background: var(--d-card); box-shadow: 0 20px 50px -30px rgba(0, 0, 0, .45); }
+.d-summary h3 { font-size: 1.1rem; }
+.d-sum-text { font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
+.d-sum-text.is-empty { color: var(--d-muted); font-weight: 500; }
+.d-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 1px solid var(--d-line); font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.d-summary .d-btn { width: 100%; }
+.d-result { display: grid; gap: 10px; animation: d-in .4s var(--ease-out); }
+.d-result[hidden] { display: none; }
+/* il messaggio come arriverebbe su WhatsApp */
+.d-msg {
+  position: relative;
+  justify-self: end;
+  max-width: 100%;
+  padding: 10px 12px 18px;
+  border-radius: 12px 12px 2px 12px;
+  background: #D9FDD3;
+  color: #111B21;
+  font-size: .93rem;
+  line-height: 1.4;
+}
+.d-msg::after { content: "21:04 \2713\2713"; position: absolute; right: 10px; bottom: 3px; color: #53BDEB; font-size: .68rem; letter-spacing: -.05em; }
+.d-msg-to { color: var(--d-muted); font-size: .8rem; font-weight: 700; }
+
+/* carrello */
+.d-cart-lines { display: grid; gap: 12px; }
+.d-cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; font-size: .95rem; }
+.d-cart-line .d-stepper { padding: 2px; }
+.d-cart-line .d-step { width: 32px; height: 32px; font-size: 1.1rem; }
+.d-cart-line output { min-width: 1.8em; }
+.d-cart-empty { color: var(--d-muted); }
+.d-ship { display: grid; gap: 6px; font-size: .88rem; }
+.d-ship-bar { height: 6px; overflow: hidden; border-radius: 999px; background: var(--d-soft); }
+.d-ship-bar i { display: block; height: 100%; border-radius: inherit; background: var(--d-accent); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease-out); }
+.d-sum-rows { display: grid; gap: 6px; font-variant-numeric: tabular-nums; }
+.d-sum-rows div { display: flex; justify-content: space-between; color: var(--d-muted); }
+
+/* punti di forza, recensioni, domande */
+.d-strengths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: clamp(32px, 5vw, 48px); }
+.d-strengths li { display: grid; gap: 6px; padding: 20px; border-radius: var(--d-radius); background: var(--d-card); }
+.d-strengths b { font-size: 1.05rem; }
+.d-strengths span { color: var(--d-muted); font-size: .92rem; }
+.d-reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.d-review { display: grid; gap: 10px; align-content: start; padding: 20px; border-radius: var(--d-radius); box-shadow: inset 0 0 0 1px var(--d-line); }
+.d-stars { color: var(--d-star, #F5A524); letter-spacing: 2px; }
+.d-review p { font-size: .97rem; }
+.d-review cite { color: var(--d-muted); font-size: .85rem; font-style: normal; font-weight: 700; }
+.d-sample { display: inline-block; margin-top: 18px; padding: 6px 12px; border-radius: 999px; background: var(--d-soft); color: var(--d-muted); font-size: .8rem; }
+@media (max-width: 860px) { .d-strengths, .d-reviews { grid-template-columns: minmax(0, 1fr); } }
+.d-faq { display: grid; gap: 10px; }
+.d-faq details { padding: 16px 18px; border-radius: var(--d-radius); background: var(--d-card); }
+.d-faq summary { font-weight: 700; cursor: pointer; }
+.d-faq p { margin-top: 8px; color: var(--d-muted); }
+
+/* orari, indirizzo e mappa disegnata */
+.d-info { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(20px, 4vw, 48px); align-items: start; }
+@media (max-width: 860px) { .d-info { grid-template-columns: minmax(0, 1fr); } }
+.d-hours { display: grid; gap: 0; }
+.d-hours div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--d-line); }
+.d-hours dt { font-weight: 700; }
+.d-hours dd { color: var(--d-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.d-where { display: grid; gap: 12px; margin-top: 22px; }
+.d-where-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.d-map {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--d-radius);
+  background: var(--d-map-land, #E8E1D4);
+}
+.d-map i { position: absolute; display: block; }
+.d-map .road { height: 10px; border-radius: 5px; background: var(--d-map-road, #FFFFFF); transform-origin: left center; }
+.d-map .water { background: var(--d-map-water, #8EC5E8); }
+.d-map .park { border-radius: 40%; background: var(--d-map-park, #B9D9A3); }
+.d-pin { position: absolute; display: grid; justify-items: center; gap: 4px; transform: translate(-50%, -100%); }
+.d-pin b {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--d-accent);
+  color: var(--d-on-accent);
+  font-size: .78rem;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .5);
+}
+.d-pin i { position: relative; width: 16px; height: 16px; border: 3px solid #FFFFFF; border-radius: 50%; background: var(--d-accent); }
+.d-pin i::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; background: var(--d-accent); animation: d-ping 1.8s var(--ease-out) infinite; }
+@keyframes d-ping { from { opacity: .6; transform: scale(1); } to { opacity: 0; transform: scale(3); } }
+
+/* footer del sito finto */
+.d-foot { padding-block: 36px 28px; background: var(--d-foot-bg, rgba(0, 0, 0, .06)); }
+.d-foot-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px 32px; }
+.d-foot p { color: var(--d-muted); font-size: .9rem; }
+.d-foot-links { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .9rem; font-weight: 600; }
+.d-foot-links a { text-underline-offset: 4px; }
+.d-foot-note { margin-top: 20px !important; font-size: .8rem !important; }
+/* dicitura legale delle demo: ben leggibile, su una fascia sua */
+.demo .d-foot .d-foot-note {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+  color: inherit;
+  font-size: .9rem !important;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.d-foot .d-note { color: inherit; opacity: .8; }
+
+/* avviso in basso: "nella demo il pulsante non chiama nessuno" */
+.d-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 70;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: #0F172A;
+  box-shadow: inset 0 0 0 1px rgba(129, 140, 248, .45), 0 18px 40px -16px rgba(2, 6, 23, .9);
+  color: #F1F5F9;
+  font: 600 .9rem/1.35 var(--f-body);
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition: opacity .25s, transform .3s var(--ease-out);
+}
+.d-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* =====================================================================
+   Dodici Braccia: osteria di mare, sabbia, blu profondo e terracotta
+   ===================================================================== */
+.d-faro {
+  --d-bg: #F4EBDD;
+  --d-ink: #10324A;
+  --d-muted: #4B6475;
+  --d-card: #FBF6EE;
+  --d-soft: #E9DDCA;
+  --d-line: rgba(16, 50, 74, .16);
+  --d-line-strong: rgba(16, 50, 74, .35);
+  --d-accent: #C2412D;
+  --d-accent-text: #A8361F;
+  --d-on-accent: #FFF8EE;
+  --d-head: Georgia, "Times New Roman", serif;
+  --d-map-land: #EFE4D2;
+  --d-map-water: #2A6F96;
+  --d-map-road: #FFFFFF;
+  --d-foot-bg: #10324A;
+}
+.d-faro .d-logo { font-style: italic; font-weight: 700; }
+.d-faro .d-h1, .d-faro .d-h2 { font-weight: 700; }
+.d-faro .d-foot { color: #F4EBDD; }
+.d-faro .d-foot p { color: rgba(244, 235, 221, .75); }
+.faro-art { position: relative; aspect-ratio: 5 / 4; overflow: hidden; border-radius: 22px; }
+.faro-sky { position: absolute; inset: 0; background: linear-gradient(#EE8F52 0%, #F5B878 38%, #F9DDB0 58%); }
+.faro-sun { position: absolute; left: 50%; top: 22%; width: 34%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #FFF6DE 0 38%, #FFD685 58%, transparent 70%); animation: sun 9s var(--ease-io) infinite alternate; }
+@keyframes sun { to { transform: translateY(14%) scale(1.06); } }
+.faro-sea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: repeating-linear-gradient(180deg, transparent 0 9px, rgba(249, 221, 176, .28) 9px 11px), linear-gradient(#1B5B80, #0E3B5C);
+}
+.faro-rock { position: absolute; right: -2%; bottom: 34%; width: 44%; height: 34%; background: #4A2C25; clip-path: polygon(0 100%, 8% 60%, 22% 48%, 38% 30%, 55% 22%, 70% 28%, 86% 20%, 100% 34%, 100% 100%); }
+.faro-tower { position: absolute; right: 18%; bottom: 57%; width: 6%; height: 26%; background: repeating-linear-gradient(180deg, #F4EBDD 0 12%, #C2412D 12% 24%); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); }
+.faro-boat { position: absolute; left: 18%; bottom: 22%; width: 16%; height: 5%; border-radius: 0 0 50% 50%; background: #F4EBDD; animation: boat 6s ease-in-out infinite alternate; }
+.faro-boat::before { content: ""; position: absolute; left: 45%; bottom: 100%; width: 32%; height: 260%; background: #F4EBDD; clip-path: polygon(0 100%, 100% 100%, 0 0); }
+@keyframes boat { to { transform: translate(40%, -12%) rotate(-3deg); } }
+
+/* =====================================================================
+   Rossobrace: bottega del peperoncino, nero brace, crema e rosso peperoncino
+   ===================================================================== */
+.d-brace {
+  --d-bg: #160B0A;
+  --d-ink: #F7E9DC;
+  --d-muted: #C9B2A3;
+  --d-card: #24120F;
+  --d-soft: #3A1D18;
+  --d-line: rgba(247, 233, 220, .14);
+  --d-line-strong: rgba(247, 233, 220, .35);
+  --d-accent: #D7261E;
+  --d-accent-text: #FF6A4D;
+  --d-on-accent: #FFF4EA;
+  --d-head: var(--f-display);
+  --d-star: #FFB020;
+  --d-map-land: #3A2A22;
+  --d-map-water: #1E3A52;
+  --d-map-road: #6B4A3C;
+  --d-map-park: #2F4A2A;
+  --d-foot-bg: #0D0605;
+  --d-focus: #FFB020;
+}
+.d-brace .d-logo, .d-brace .d-h1, .d-brace .d-h2 { font-weight: 800; letter-spacing: -.02em; }
+.d-brace .d-summary { box-shadow: inset 0 0 0 1px var(--d-line); }
+.d-cart-btn { position: relative; }
+.d-cart-btn em { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #FFF4EA; color: #D7261E; font-style: normal; font-size: .8rem; }
+.brace-art { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 50% 55%, #5A0F0C, transparent 68%); }
+.jar { position: relative; width: 38%; aspect-ratio: 7 / 8.4; border-radius: 10% 10% 16% 16%; background: linear-gradient(90deg, #8E120D, #D7261E 45%, #A1170F); }
+.jar::before { content: ""; position: absolute; left: -6%; right: -6%; top: -12%; height: 15%; border-radius: 6px; background: #2A1A17; }
+.jar span { position: absolute; left: 10%; right: 10%; top: 38%; padding: 6% 0; border-radius: 4px; background: #F7E9DC; color: #8E120D; font-weight: 800; font-size: .8rem; text-align: center; }
+.brace-art .jar { width: 46%; animation: jar 5s var(--ease-io) infinite alternate; }
+.brace-art .jar span { font-size: clamp(.9rem, 2.4vw, 1.4rem); }
+@keyframes jar { to { transform: rotate(-6deg) translateY(-4%); } }
+.d-card .jar { width: 64px; margin: 14px auto 4px; }
+.d-card .jar span { font-size: .55rem; }
+.jar--hot { background: linear-gradient(90deg, #5E0805, #A3120A 45%, #6E0A06); }
+.jar--log { width: 92px !important; aspect-ratio: 2.4 / 1 !important; border-radius: 40px !important; background: linear-gradient(180deg, #A3120A, #6E0A06) !important; }
+.jar--log::before { display: none; }
+.jar--log span { top: 30% !important; }
+.jar--cream { background: linear-gradient(90deg, #B4471A, #E8702E 45%, #BE4F1E); }
+.jar--onion { background: linear-gradient(90deg, #5B1748, #8E2C6E 45%, #5B1748); }
+.jar--box { border-radius: 8px !important; background: linear-gradient(90deg, #2A1A17, #4B2A22 45%, #2A1A17); }
+.jar--box span { background: #D7261E; color: #F7E9DC; }
+
+/* =====================================================================
+   Studio Cuspide: studio dentistico, bianco menta, petrolio e verde acqua
+   ===================================================================== */
+.d-dent {
+  --d-bg: #F6FAF9;
+  --d-ink: #0F2A3A;
+  --d-muted: #4A6372;
+  --d-card: #FFFFFF;
+  --d-soft: #E3F1EE;
+  --d-line: rgba(15, 42, 58, .12);
+  --d-line-strong: rgba(15, 42, 58, .3);
+  --d-accent: #0E8A71;
+  --d-accent-text: #0B7A64;
+  --d-on-accent: #FFFFFF;
+  --d-head: var(--f-display);
+  --d-map-land: #E9F1EE;
+  --d-map-water: #BFE3F2;
+  --d-map-road: #FFFFFF;
+  --d-map-park: #CDE8C4;
+  --d-foot-bg: #0F2A3A;
+}
+.d-dent .d-logo { color: #0E8A71; }
+.d-dent .d-h1, .d-dent .d-h2 { font-weight: 800; }
+.d-dent .d-foot { color: #F6FAF9; }
+.d-dent .d-foot p { color: rgba(246, 250, 249, .72); }
+.dent-cal { display: grid; gap: 14px; padding: 22px; border-radius: 22px; background: #FFFFFF; box-shadow: 0 30px 60px -30px rgba(15, 42, 58, .35); }
+.dent-month { font-weight: 800; }
+.dent-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.dent-days i { aspect-ratio: 1; border-radius: 8px; background: #E3F1EE; }
+.dent-days i.on { background: #0E8A71; animation: pick 3s var(--ease-io) infinite; }
+@keyframes pick { 50% { transform: scale(1.18); border-radius: 50%; } }
+.dent-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.dent-slots span { padding: 6px 12px; border-radius: 999px; background: #E3F1EE; font-size: .85rem; font-weight: 600; }
+.dent-slots .on { background: #0F2A3A; color: #FFFFFF; }
+.d-steps-mini { display: grid; gap: 10px; margin-top: 16px; counter-reset: passo; }
+.d-steps-mini li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; counter-increment: passo; }
+.d-steps-mini li::before { content: counter(passo); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--d-soft); color: var(--d-accent-text); font-weight: 800; font-size: .85rem; }
+.d-meta { display: inline-block; margin-top: 16px; padding: 6px 12px; border-radius: 999px; background: var(--d-soft); font-size: .85rem; font-weight: 700; }
+.d-panel-text { display: grid; gap: 4px; max-width: 46rem; }
+
+/* =====================================================================
+   Planata: scuola di kitesurf, blu elettrico, crema e giallo vela
+   ===================================================================== */
+.d-kite {
+  --d-bg: #1238FF;
+  --d-ink: #FFF7D6;
+  --d-muted: #C9D2FF;
+  --d-card: #0B1E8F;
+  --d-soft: #2A4CFF;
+  --d-line: rgba(255, 247, 214, .18);
+  --d-line-strong: rgba(255, 247, 214, .45);
+  --d-accent: #FFE14D;
+  --d-accent-text: #FFE14D;
+  --d-on-accent: #0B1E8F;
+  --d-head: var(--f-display);
+  --d-star: #FFE14D;
+  --d-map-land: #E9D9A6;
+  --d-map-water: #0B5FD6;
+  --d-map-road: #FFF7D6;
+  --d-map-park: #9CC27A;
+  --d-foot-bg: #0B1E8F;
+  --d-focus: #FFE14D;
+}
+.d-kite .d-logo { font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.d-kite .d-h1 { color: #FFE14D; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; line-height: .92; }
+.d-kite .d-h2 { font-weight: 800; }
+.d-kite .d-sec:nth-of-type(even) { background: #0F2EE0; }
+.kite-art { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 26px; background: linear-gradient(#5FA8FF, #1238FF 70%); }
+.kite { position: absolute; right: 16%; top: 14%; width: 54%; height: 22%; border-radius: 50% 50% 0 0 / 100% 100% 0 0; background: linear-gradient(90deg, #FF4D6D, #FFE14D); transform: rotate(-12deg); animation: kite 4s var(--ease-io) infinite alternate; }
+.kite::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 220%; background: rgba(255, 247, 214, .7); transform: rotate(18deg); transform-origin: top; }
+@keyframes kite { to { transform: rotate(4deg) translate(-8%, 10%); } }
+.kite-rider { position: absolute; left: 30%; bottom: 25%; width: 16%; height: 4%; border-radius: 999px; background: #FFF7D6; animation: rider 4s var(--ease-io) infinite alternate; }
+@keyframes rider { to { transform: translate(30%, -20%) rotate(-6deg); } }
+.kite-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 28%;
+  background: radial-gradient(16px 10px at 16px 0, transparent 98%, #0B1E8F) 0 0 / 32px 10px repeat-x, linear-gradient(#0B1E8F, #0B1E8F) 0 10px / 100% 100% no-repeat;
+}
+.d-hero-copy .kite-strip { justify-self: stretch; }
+.kite-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.kite-strip li { display: grid; gap: 2px; padding: 16px; border-radius: var(--d-radius); background: rgba(255, 247, 214, .08); }
+.kite-strip b { color: #FFE14D; font-family: var(--f-display); font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
+.kite-strip span { font-size: .9rem; }
+@media (max-width: 560px) { .kite-strip { grid-template-columns: minmax(0, 1fr); } }
+.d-kite .d-review { box-shadow: inset 0 0 0 1px rgba(255, 247, 214, .25); }
+
+/* ---------- Ritocchi comuni ---------- */
+/* i link interni della demo (Menu, Prenota...) scorrono morbidi; il tour invece si muove da solo, a scatti di un fotogramma */
+/* il tour fa scorrere la pagina un fotogramma alla volta: lo scorrimento morbido del browser va spento,
+   altrimenti ogni passo diventerebbe una piccola animazione. Questo file si carica solo nelle demo */
+html, body { scroll-behavior: auto !important; }
+.d-after { margin-top: 18px; }
+.d-count { margin: -10px 0 16px; }
