@@ -303,16 +303,20 @@
     const y = clamp(sh / 2 - (fy / 100) * ih, sh - ih, 0);
     return { x, y, scale: s, px: x + (fx / 100) * iw, py: y + (fy / 100) * ih };
   };
-  const section = d.querySelector('.works');
-  // il fondo della sezione prende il colore del progetto sullo schermo; prima del primo e dopo l'ultimo torna notte
-  const tint = (w) => {
-    if (!section) return;
+  // il fondo di ogni sezione (lavori consegnati, demo) prende il colore del progetto sullo schermo; prima del primo
+  // e dopo l'ultimo di quella sezione torna notte
+  const tint = (section, w) => {
     const c = w ? w.style.getPropertyValue('--case-bg').trim() : '';
     gsap.to(section, { '--works-bg': c || '#0B0F19', duration: 0.8, overwrite: 'auto' });
   };
-  const onCase = (w, i) => (self) => {
-    if (self.isActive) tint(w);
-    else if ((i === works.length - 1 && self.direction > 0) || (i === 0 && self.direction < 0)) tint(null);
+  const onCase = (w) => {
+    const section = w.closest('.works');
+    const own = [...section.querySelectorAll('.work')];
+    const i = own.indexOf(w);
+    return (self) => {
+      if (self.isActive) tint(section, w);
+      else if ((i === own.length - 1 && self.direction > 0) || (i === 0 && self.direction < 0)) tint(section, null);
+    };
   };
 
   if (hasGsap && works.length) {
@@ -347,7 +351,7 @@
               const k = Math.min(2, Math.floor(self.progress * 3.2));
               steps.forEach((s, i) => s.classList.toggle('is-on', i <= k));
             },
-            onToggle: onCase(w, i),
+            onToggle: onCase(w),
           },
         });
         tl.set(img, { x: () => cam(0).x, y: () => cam(0).y, scale: () => cam(0).scale }, 0)
@@ -360,7 +364,7 @@
           .to(img, { x: () => cam(2).x, y: () => cam(2).y, scale: () => cam(2).scale, duration: 1 }, 2.2)
           .fromTo(scenes[2], { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.4 }, 2.5)
           .set(ping, { x: () => cam(2).px, y: () => cam(2).py }, 3.2)
-          .fromTo(ping, { opacity: 0.9, scale: 0.6 }, { opacity: 0, scale: 1.9, duration: 0.6, ease: 'power1.out' }, 3.2)
+          .fromTo(ping, { opacity: 0.9, scale: 0.6 }, { opacity: 0, scale: 1.9, duration: 0.6, ease: 'power1.out', immediateRender: false }, 3.2)
           .to({}, { duration: 0.5 });
       });
       return () => root.classList.remove('has-cases');
@@ -373,7 +377,7 @@
           rotateX: 0, scale: 1, y: 0, ease: 'none',
           scrollTrigger: { trigger: w.querySelector('.case-visual'), start: 'top bottom', end: 'top 45%', scrub: 0.5 },
         });
-        ScrollTrigger.create({ trigger: w, start: 'top 60%', end: 'bottom 40%', onToggle: onCase(w, i) });
+        ScrollTrigger.create({ trigger: w, start: 'top 60%', end: 'bottom 40%', onToggle: onCase(w) });
       });
     });
   }

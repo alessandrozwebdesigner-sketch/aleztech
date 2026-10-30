@@ -1090,6 +1090,12 @@ img.page { display: block; width: 100%; height: auto; }
 .scene dt { color: var(--ciano); font-size: .9rem; font-weight: 600; }
 .scene dd { margin: 0; max-width: 32em; color: var(--latte); font-size: var(--t-lead); line-height: 1.5; }
 .scene-measure { display: block; margin-top: 10px; color: var(--nebbia); font-size: 1rem; }
+.scene-measure a { color: var(--ciano); text-underline-offset: 3px; }
+.scene-voice { margin-top: 14px; }
+.scene-quote { margin: 0; font-size: 1.05rem; }
+.scene-source { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.scene-source img { display: block; }
+.scene-source + .scene-measure { margin-top: 8px; }
 .case-links { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; }
 .case-links a { color: var(--ciano); font-weight: 600; text-decoration-color: rgba(56, 189, 248, .4); text-underline-offset: 3px; }
 .case-links a:hover { text-decoration-color: var(--ciano); }
@@ -1148,6 +1154,12 @@ img.page { display: block; width: 100%; height: auto; }
 }
 .case-steps li.is-on { border-top-color: var(--ciano); color: var(--latte); }
 .has-cases .scene { grid-area: 1 / 1; }
+/* schermi bassi: la scena con la frase del cliente deve stare in vista insieme ai link */
+@media (max-height: 760px) {
+  .has-cases .scene dd:has(+ .scene-voice) .scene-measure { display: none; }
+  .has-cases .case-story { gap: 14px; }
+  .has-cases .scene-quote { font-size: 1rem; }
+}
 .has-cases .case .page { animation: none; transform-origin: 0 0; }
 
 /* ---------- Home premium: per chi lavoro ---------- */
